@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stdlib.h>
 #include "computepi.h"
 
 int main(int argc, char const *argv[])
@@ -31,7 +32,11 @@ int main(int argc, char const *argv[])
 #endif
 
 #if defined(MONTECARLO)
-	pi = compute_pi_montecarlo(N);
+    pi = compute_pi_montecarlo(N);
+#endif
+
+#if defined(MONTECARLO_4)
+    pi = compute_pi_montecarlo_pthread(N, 4);
 #endif
 
     printf("N = %d , pi = %lf\n", N, pi);

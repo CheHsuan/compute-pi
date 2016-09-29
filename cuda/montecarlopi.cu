@@ -3,7 +3,11 @@
 #include <curand_kernel.h>
 #include <time.h>
 #include <stdio.h>
+#include <math.h>
+
+#ifndef ITERATIONSPERTHREAD
 #define ITERATIONSPERTHREAD 4000
+#endif
 
 __global__ void monte_carlo_kernel( curandState* state, unsigned int seed, int *numbers)
 {
@@ -22,7 +26,7 @@ __global__ void monte_carlo_kernel( curandState* state, unsigned int seed, int *
 }
 
 double compute_pi_montecarlo_gpu(size_t N){
-    int threadsPerBlock = 500;
+    int threadsPerBlock = 1000;
     int blocksPerGrid = (N / threadsPerBlock) / ITERATIONSPERTHREAD;
     curandState *devStates;
     int *dev_nums;
@@ -66,6 +70,17 @@ double compute_pi_montecarlo_cpu(size_t N)
     return pi;
 }
 
+void calculate_error_rate()
+{
+    double pi = 0.0;
+    for(int i = 1; i <= 100; i++){
+        pi = compute_pi_montecarlo_gpu(i*1000000);
+        double diff = pi - M_PI > 0 ? pi - M_PI : M_PI - pi;
+        double error = diff / M_PI;
+        printf("%u,%lf\n", i, error);
+    }
+}
+
 int main(int argc, char *argv[])
 {
     __attribute__((unused)) int N = 400000000;
@@ -105,6 +120,10 @@ int main(int argc, char *argv[])
     clock_gettime(CLOCK_ID, &end);
     printf("%lf\n", (double) (end.tv_sec - start.tv_sec) +
            (end.tv_nsec - start.tv_nsec)/ONE_SEC);
+#endif
+
+#if defined(ERRORRATE)
+    calculate_error_rate();
 #endif
 
     return 0;

@@ -5,11 +5,18 @@ EXEC = \
 	time_test_montecarlo_cpu time_test_montecarlo_gpu\
 	benchmark_clock_gettime error_rate_gpu
 
-all: 
-	$(NVCC) montecarlopi.cu -o time_test_montecarlo_cpu -DMONTECARLO_CPU $(LIB)
-	$(NVCC) montecarlopi.cu -o time_test_montecarlo_gpu -DMONTECARLO_GPU $(LIB)
-	$(NVCC) montecarlopi.cu -o benchmark_clock_gettime -DBENCHMARK $(LIB)
-	$(NVCC) $(CFLAGS) montecarlopi.cu -o error_rate_gpu -DERRORRATE $(LIB)
+SRCS_common = main.c
+
+%.o: %.cu
+	$(NVCC) -c $^ -o $@
+
+default: montecarlopi.o
+	$(NVCC) $^ $(SRCS_common) -o time_test_montecarlo_cpu -DMONTECARLO_CPU $(LIB)
+	$(NVCC) $^ $(SRCS_common) -o time_test_montecarlo_gpu -DMONTECARLO_GPU $(LIB)
+	$(NVCC) $^ $(SRCS_common) -o benchmark_clock_gettime -DBENCHMARK $(LIB)
+	$(NVCC) $(CFLAGS) $^ $(SRCS_common) -o error_rate_gpu -DERRORRATE $(LIB)
+
+.PHONY: clean default
 
 check:
 	time ./time_test_montecarlo_cpu
@@ -26,6 +33,5 @@ errorrate:
 	printf ",Monte Carlo with GPU\n" > result_clock_gettime.csv
 	./error_rate_gpu >> result_clock_gettime.csv
 
-
 clean:
-	rm -f $(EXEC) result_clock_gettime.csv
+	rm -f $(EXEC) *.o result_clock_gettime.csv
